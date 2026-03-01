@@ -12,19 +12,19 @@ import { APIResponse } from "../utils/APIResponse.js";
 const registerUser = asyncHandler(async (req, res)=>{
  //get user details from frontend(postman)
 
-const {fullname, email, password} = req.body;
+const {fullname, email, password, username} = req.body;
 console.log("email: ", email) //to check the data coming from frontend or not 
 
 
 
- //validation-not empty
+ //validation-kahi empty toh nhi reh gya
 
  if(fullname===""){
   throw new APIError(400, "Fullname is required")
  }
 
  if(
-  [email, password, fullname, username].some(()=>field?.trim()==="")
+  [email, password, fullname, username].some((field)=> field?.trim()==="")
  ){
 throw new APIError(400, "All fields are required and must not be empty")
  }
@@ -37,7 +37,7 @@ throw new APIError(400, "All fields are required and must not be empty")
 
 // User.findOne({email: email})//ya ek check kr sakte ho ya pure me se koii bhi ek mil jaye toh niche wala method se check kr sakte ho
 
-const existedUser = User.findOne({
+const existedUser = await User.findOne({
 
   $or: [{username}, {email}]
 })
@@ -46,11 +46,23 @@ if(existedUser){
   throw new APIError(409, "User already exist with this email or username")
 }
 
-
+// console.log(req.files);
 
   //check for images, chech for avatar
 const avatarLocalPath= req.files?.avatar[0]?.path; //yeh path multer se aayega, multer ke storage me humne kaha hai ki file kaha save karni hai toh yeh path usi location ka dega jaha file save hui hai, aur yeh path hume cloudinary me upload karne ke liye chahiye hoga
-const coverImageLocalPath= req.files?.coverImage[0]?.path; 
+
+//method-1 for coverImage
+// const coverImageLocalPath= req.files?.coverImage[0]?.path; 
+// method-2 for coverImage
+let coverImageLocalPath;
+if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
+  coverImageLocalPath = req.files.coverImage[0].path
+}
+
+
+
+
+
 //if avatar localpath pe nhi hai
 if(!avatarLocalPath){
   throw new APIError(400, "Avatar is required")
@@ -62,10 +74,9 @@ if(!avatarLocalPath){
 const avatar = await uploadOnCloudinary(avatarLocalPath)
 const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
-if(avatar===null){
+if(!avatar){
   throw new APIError(400, "Error while uploading avatar image/avatar image is required")
 }
-
 
 
 
@@ -107,3 +118,4 @@ const user = await User.create({
 })
 
 export {registerUser, }
+
