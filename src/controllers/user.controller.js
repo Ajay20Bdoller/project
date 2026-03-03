@@ -3,6 +3,8 @@ import { APIError } from "../utils/APIError.js";
 import {User} from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { APIResponse } from "../utils/APIResponse.js";
+import mongoose from "mongoose";
+import Jwt from "jsonwebtoken";
 
 
 
@@ -478,7 +480,62 @@ return res
 
 })
 
+const getWatchHistory =  asyncHandler(async (req, res)=>{
+  const user = await User.aggregate([
 
+    {
+      $match: {
+        _id:new mongoose.Types.ObjectId(req.user._id)
+
+      }
+    },
+    {
+      $lookup :{
+        from:"videos",
+        localField:"watchHistory",
+        foreignField:"_id",
+        as:"watchHistory",
+        pipeline:[ {
+          $lookup:{
+            from:"users",
+            localField:"owner",
+            foreignField:"_id",
+            as:"owner",
+            pipeline:[
+              {
+                $project: {
+                  fullname:1,
+                  username:1,
+                  avatar:1
+
+                }
+              }
+
+            ]
+          }
+        },
+        {
+          $addFields:{
+            owner:{
+              $first:"$owner"
+            }
+          }
+        }
+        ]
+      }
+    }
+  ])
+
+  return res
+  .status(200)
+  .json(
+    new APIResponse (
+      200,
+      user[0].watchHistory, "watch history fetched suceesfully"
+    )
+  )
+
+})
 
 export {registerUser,
    loginUser, 
@@ -489,7 +546,9 @@ export {registerUser,
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory,
+
 
 
 
