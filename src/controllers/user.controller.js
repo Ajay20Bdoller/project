@@ -286,14 +286,47 @@ try {
   
 }
 
+})
 
 
+const changeCurrentPassword = asyncHandler(async(req, res)=>{
+
+  const {oldPassword, newPassword, confPassword}= req.body
+
+  const user = await User.findById(req.user?._id)
+  const isPasswordCorrect =await user.isPasswordCorrect(oldPassword)
+
+  if(!isPasswordCorrect){
+    throw new APIError (400,"Invalid old password")
+  }
+user.password=newPassword
+await user.save({validateBeforeSave: false})
+
+return res.status(200).
+json(new APIResponse(200, {}, "password changed successfully"))
+
+if(!(newPassword==confPassword)){
+  throw new APIError (400,"pass not same")
+}
+
+})
+
+const getCurrentUser = asyncHandler(async(req, resp)=>{
+return res
+.status(200)
+.json(200, req.user, "current user fetched successfully")
+
+})
+
+//user kya kya update kr sakta hai ye hum hi decide krte hai backend me
+const updateAccountDetails = asyncHandler(async(req, res)=>{
+  const {fullname, email}= req.body
+if(!(fullname || email)){
+  throw new APIError(400, "All field are required")
+}
 
 
 })
 
-
-
-
-export {registerUser, loginUser, logoutUser, refreshAccessToken}
+export {registerUser, loginUser, logoutUser, refreshAccessToken,changeCurrentPassword,getCurrentUser,updateAccountDetails }
 
