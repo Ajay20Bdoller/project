@@ -1,6 +1,6 @@
 import mongoose, {Schema} from 'mongoose';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 
 
 const userSchema = new Schema(
@@ -39,14 +39,14 @@ avatar: {
 
 },
 
-coverimage:{
+coverImage:{
   type: String, //we use claudinary url to store the coverimage and it will return a url
 
 },
 
 watchHistory: {//isme multiple value rahenge thats why its an array 
   type: Schema.Types.ObjectId,
-  ref: " Video",
+  ref: "Video",
 
 
 
@@ -62,7 +62,7 @@ password: {
 
 },
 
-refeshToken:{
+refreshToken:{
   type: String,
 
 }
@@ -81,13 +81,13 @@ refeshToken:{
 userSchema.pre("save" , async function (next){
   if(!this.isModified("password")) return next();
 
-  this.password = bcrypt.hash(this.password, 10);
-  next()
+  this.password = await bcrypt.hash(this.password, 10);
 })
 
 userSchema.methods.isPasswordMatch = async function (password){
    return await bcrypt.compare(password, this.password);
 }
+
 
 userSchema.methods.generateAccessToken = function(){
   return jwt.sign({
